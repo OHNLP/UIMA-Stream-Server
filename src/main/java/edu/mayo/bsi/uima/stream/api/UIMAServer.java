@@ -6,4 +6,10 @@ package edu.mayo.bsi.uima.stream.api;
  * requesting client
  */
 public interface UIMAServer {
+
+    /**
+     * Called on server bootup, initialization tasks should not be done as part of the constructor
+     */
+    void start();
+    UIMAServerPlugin getPlugin(String pluginName);
 }
