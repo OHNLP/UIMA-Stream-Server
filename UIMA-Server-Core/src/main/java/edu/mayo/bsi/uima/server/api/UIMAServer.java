@@ -35,7 +35,7 @@ public interface UIMAServer {
      * Registers a stream by name
      *
      * @param streamName   The name of the stream
-     * @param metadataDesc A descriptor for the analysis engine used to process metadata by this stream,
+     * @param metadataDesc (Optional) A descriptor for the analysis engine used to process metadata by this stream,
      *                     it is always the first analysis engine run after a request is received
      * @param pipelineDesc A descriptor for the analysis engine UIMA should use as part of the NLP pipeline
      * @return The registered stream if successful. Throws a subclass of {@link RuntimeException} otherwise

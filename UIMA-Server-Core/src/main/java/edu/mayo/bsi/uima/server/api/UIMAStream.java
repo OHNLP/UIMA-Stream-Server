@@ -15,7 +15,7 @@ public interface UIMAStream {
 
     /**
      * @param name         The name of the stream
-     * @param metadataDesc A descriptor for the analysis engine used to process metadata by this stream,
+     * @param metadataDesc (Optional) A descriptor for the analysis engine used to process metadata by this stream,
      *                     it is always the first analysis engine run after a request is received
      * @param pipelineDesc A descriptor for the analysis engine UIMA should use as part of the NLP pipeline
      * @return A new UIMA stream instance when initialization is completed using the given settings
@@ -28,7 +28,7 @@ public interface UIMAStream {
      * Schedules a request to the UIMA pipeline for processing
      *
      * @param document The document to process
-     * @param metadata Metadata to associate with this document
+     * @param metadata Metadata to associate with this document (optional)
      * @return A completable future that will return a deep copy of the resulting CAS once computation is complete.
      * This returned CAS can be further manipulated on a different thread as the UIMA pipeline processing it
      */

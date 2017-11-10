@@ -13,7 +13,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -23,15 +25,16 @@ import java.util.jar.JarFile;
 /**
  * Serves as a base class common to the various UIMA server implementations: loads plugins and creates relevant streams
  */
-public abstract class UIMAServerBase extends URLClassLoader implements UIMAServer {
+public abstract class UIMAServerBase implements UIMAServer {
 
     private Map<String, UIMAServerPlugin> plugins;
     private Map<String, UIMAStream> streams;
     private Map<String, UIMANLPResultSerializer> serializers;
+    private URLClassLoader classLoader;
 
 
     protected UIMAServerBase() {
-        super(((URLClassLoader) UIMAServer.class.getClassLoader()).getURLs(), UIMAServer.class.getClassLoader());
+        this.classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
         this.plugins = new HashMap<>();
         this.streams = new HashMap<>();
         this.serializers = new HashMap<>();
@@ -40,10 +43,16 @@ public abstract class UIMAServerBase extends URLClassLoader implements UIMAServe
 
     private void init() {
         loadPlugins();
+        enablePlugins();
         start();
     }
 
-    // Initialization
+    private void enablePlugins() {
+        for (UIMAServerPlugin p : plugins.values()) {
+            p.onEnable(this);
+        }
+    }
+
     private void loadPlugins() {
         // Plugin loading
         File pluginDir = new File("plugins");
@@ -55,14 +64,14 @@ public abstract class UIMAServerBase extends URLClassLoader implements UIMAServe
         if (!pluginDir.isDirectory()) {
             throw new RuntimeException("/plugins is reserved and is not a directory");
         }
-        File[] pluginJars = pluginDir.listFiles(new FileUtil.NameFileFilter("jar"));
+        File[] pluginJars = pluginDir.listFiles(new FileUtil.ExtFilenameFilter("jar"));
         if (pluginJars == null || pluginJars.length == 0) {
             throw new RuntimeException("Either plugins were not accessible or at least one must exist");
         }
         for (File jar : pluginJars) {
             try {
                 addURL(jar.toURI().toURL());
-            } catch (MalformedURLException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
             UIMAServerPlugin plugin = loadUIMAServerPlugin(jar);
@@ -80,20 +89,21 @@ public abstract class UIMAServerBase extends URLClassLoader implements UIMAServe
             String mainClass = null;
             while (entries.hasMoreElements()) {
                 JarEntry element = entries.nextElement();
-                if (element.getName().equalsIgnoreCase("plugin.info")) {
+
+                if (element.getName().equalsIgnoreCase("plugin-class.info")) {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(jar.getInputStream(element)));
                     String next = reader.readLine();
                     if (next != null) {
-                        mainClass = next.substring(12);
+                        mainClass = next;
                         break;
                     }
                 }
             }
             if (mainClass != null) {
-                Class<?> pluginClazz = Class.forName(mainClass, true, this);
-                Constructor<?> ctor = pluginClazz.getConstructor(UIMAServer.class);
+                Class<?> pluginClazz = Class.forName(mainClass, true, classLoader);
+                Constructor<?> ctor = pluginClazz.getConstructor();
                 jar.close();
-                return (UIMAServerPlugin) ctor.newInstance(this);
+                return (UIMAServerPlugin) ctor.newInstance();
             } else {
                 return null;
             }
@@ -101,6 +111,18 @@ public abstract class UIMAServerBase extends URLClassLoader implements UIMAServe
                 IllegalAccessException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    private void addURL(URL url) throws IOException {
+        Class<?> sysclass = URLClassLoader.class;
+        try {
+            Method method = sysclass.getDeclaredMethod("addURL", URL.class);
+            method.setAccessible(true);
+            method.invoke(classLoader, url);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new IOException("Error, could not add URL to system classloader");
         }
     }
 

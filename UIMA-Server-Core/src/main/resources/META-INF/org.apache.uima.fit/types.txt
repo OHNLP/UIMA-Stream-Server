@@ -1,1 +1,1 @@
-classpath*:edu/mayo/bsi/uima/stream/types/*.xml
+classpath*:edu/mayo/bsi/uima/server/types/*.xml

@@ -42,8 +42,8 @@ public class UIMAStreamImpl implements UIMAStream {
         String threadProp;
         if ((threadProp = System.getProperty("uima.streams.%pipeline%.threads".replace("%pipeline%", name))) == null) {
             logger.log(Level.WARNING, "The number of pipeline threads for this stream was not set via " +
-                    "-Duima.server.%pipeline%.threads. Please set the value of this property as your CPU allows " +
-                    "to improve performance".replace("%pipeline%", name));
+                    "-Duima.server.%pipeline%.threads. Please set the value of this property as your CPU allows "
+                            .replace("%pipeline%", name) + "to improve performance");
         } else {
             try {
                 numPipelines = Integer.valueOf(threadProp);
@@ -59,7 +59,9 @@ public class UIMAStreamImpl implements UIMAStream {
         threadPool = Executors.newFixedThreadPool(numPipelines);
         try {
             AggregateBuilder pipelineBuilder = new AggregateBuilder();
-            pipelineBuilder.add(metadataDesc);
+            if (metadataDesc != null) {
+                pipelineBuilder.add(metadataDesc);
+            }
             pipelineBuilder.add(pipelineDesc);
             pipelineBuilder.add(AnalysisEngineFactory.createEngineDescription(StreamResultHandlerCasConsumer.class));
             for (int i = 0; i < numPipelines; i++) {

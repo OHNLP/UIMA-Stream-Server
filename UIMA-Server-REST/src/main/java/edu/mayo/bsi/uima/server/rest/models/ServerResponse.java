@@ -9,10 +9,12 @@ import java.util.Map;
  * {@link edu.mayo.bsi.uima.server.rest.UIMARESTServer}
  */
 public class ServerResponse {
-    private final long jobDuration;
-    private final String metadata;
-    private final String message;
-    private final Map<String, Serializable> content;
+    private long jobDuration = 0;
+    private String metadata = null;
+    private String message = null;
+    private Map<String, Serializable> content = null;
+
+    public ServerResponse() {}
 
     public ServerResponse(long jobDuration, String metadata, String message, Map<String, Serializable> content) {
         this.jobDuration = jobDuration;
@@ -35,5 +37,21 @@ public class ServerResponse {
 
     public Map<String, Serializable> getContent() {
         return content;
+    }
+
+    public void setJobDuration(long jobDuration) {
+        this.jobDuration = jobDuration;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setContent(Map<String, Serializable> content) {
+        this.content = content;
     }
 }

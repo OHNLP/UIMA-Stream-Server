@@ -35,7 +35,9 @@ public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBas
         jCas.setDocumentText(CURRENT_WORK.text);
         StreamingMetadata meta = new StreamingMetadata(jCas);
         meta.setJobID(CURRENT_WORK.id.toString());
-        meta.setMetadata(CURRENT_WORK.metadata);
+        if (CURRENT_WORK.metadata != null) {
+            meta.setMetadata(CURRENT_WORK.metadata);
+        }
         meta.addToIndexes();
     }
 
