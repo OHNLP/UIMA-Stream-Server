@@ -6,10 +6,22 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="UIMA-STREAM" />
+        <module name="ExampleServerPlugin" />
+        <module name="Stream-Server-Core" />
+        <module name="Stream-Server-REST" />
+        <module name="UIMA-Server-Core" />
+        <module name="UIMA-Server-REST" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="CTAKES-FULL-PLUGIN" target="1.8" />
+      <module name="ExampleServerPlugin" target="1.8" />
+      <module name="Stream-Server-Core" target="1.8" />
+      <module name="Stream-Server-REST" target="1.5" />
+      <module name="TestPlugin" target="1.8" />
+      <module name="UIMA-Server-Core" target="1.8" />
+      <module name="UIMA-Server-Plugins" target="1.8" />
+      <module name="UIMA-Server-REST" target="1.8" />
       <module name="UIMA-STREAM" target="1.8" />
     </bytecodeTargetLevel>
   </component>

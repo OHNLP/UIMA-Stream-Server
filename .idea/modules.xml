@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/UIMA-Server-Plugins/ExampleServerPlugin/ExampleServerPlugin.iml" filepath="$PROJECT_DIR$/UIMA-Server-Plugins/ExampleServerPlugin/ExampleServerPlugin.iml" />
       <module fileurl="file://$PROJECT_DIR$/UIMA-STREAM.iml" filepath="$PROJECT_DIR$/UIMA-STREAM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/UIMA-Server-Core/UIMA-Server-Core.iml" filepath="$PROJECT_DIR$/UIMA-Server-Core/UIMA-Server-Core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/UIMA-Server-Plugins/UIMA-Server-Plugins.iml" filepath="$PROJECT_DIR$/UIMA-Server-Plugins/UIMA-Server-Plugins.iml" />
+      <module fileurl="file://$PROJECT_DIR$/UIMA-Server-REST/UIMA-Server-REST.iml" filepath="$PROJECT_DIR$/UIMA-Server-REST/UIMA-Server-REST.iml" />
     </modules>
   </component>
 </project>

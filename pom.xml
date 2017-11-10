@@ -4,58 +4,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.mayo.bsi</groupId>
-    <artifactId>uima-stream-server</artifactId>
+    <groupId>edu.mayo.bsi.uima-server</groupId>
+    <artifactId>UIMA-Server-Parent</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.8.RELEASE</version>
-    </parent>
+    <modules>
+        <module>UIMA-Server-Core</module>
+        <module>UIMA-Server-REST</module>
+        <module>UIMA-Server-Plugins</module>
+    </modules>
     
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.uima</groupId>
-                <artifactId>jcasgen-maven-plugin</artifactId>
-                <version>2.10.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <!-- runs in phase process-resources by default -->
-                        <configuration>
-
-                            <!-- REQUIRED -->
-                            <typeSystemIncludes>
-                                <typeSystemInclude>src/main/resources/edu/mayo/bsi/uima/stream/types/StreamingMetadataTypes.xml</typeSystemInclude>
-                            </typeSystemIncludes>
-
-                            <!-- OPTIONAL -->
-                            <typeSystemExcludes>
-                            </typeSystemExcludes>
-
-                            <!-- OPTIONAL -->
-                            <!-- where the generated files go -->
-                            <!-- default value:
-                                 ${project.build.directory}/generated-sources/jcasgen" -->
-                            <outputDirectory>
-                            </outputDirectory>
-
-                            <!-- true or false, default = false -->
-                            <!-- if true, then although the complete merged type system
-                                 will be created internally, only those types whose
-                                 definition is contained within this maven project will be
-                                 generated.  The others will be presumed to be
-                                 available via other projects. -->
-                            <!-- OPTIONAL -->
-                            <limitToProject>false</limitToProject>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -72,15 +33,6 @@
             <groupId>org.apache.uima</groupId>
             <artifactId>uimafit-cpe</artifactId>
             <version>2.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
