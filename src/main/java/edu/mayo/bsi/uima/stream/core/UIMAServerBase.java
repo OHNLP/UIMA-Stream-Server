@@ -1,7 +1,10 @@
 package edu.mayo.bsi.uima.stream.core;
 
+import edu.mayo.bsi.uima.stream.api.UIMANLPResultSerializer;
 import edu.mayo.bsi.uima.stream.api.UIMAServer;
 import edu.mayo.bsi.uima.stream.api.UIMAServerPlugin;
+import edu.mayo.bsi.uima.stream.api.UIMAStream;
+import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.pear.util.FileUtil;
 
 import java.io.BufferedReader;
@@ -13,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -21,12 +25,22 @@ import java.util.jar.JarFile;
  */
 public abstract class UIMAServerBase extends URLClassLoader implements UIMAServer {
 
-    protected Map<String, UIMAServerPlugin> plugins;
+    private Map<String, UIMAServerPlugin> plugins;
+    private Map<String, UIMAStream> streams;
+    private Map<String, UIMANLPResultSerializer> serializers;
+
 
     public UIMAServerBase() {
         super(((URLClassLoader) UIMAServer.class.getClassLoader()).getURLs(), UIMAServer.class.getClassLoader());
         this.plugins = new HashMap<>();
+        this.streams = new HashMap<>();
+        this.serializers = new HashMap<>();
+        init();
+    }
 
+    private void init() {
+        loadPlugins();
+        start();
     }
 
     // Initialization
@@ -43,7 +57,7 @@ public abstract class UIMAServerBase extends URLClassLoader implements UIMAServe
         }
         File[] pluginJars = pluginDir.listFiles(new FileUtil.NameFileFilter("jar"));
         if (pluginJars == null || pluginJars.length == 0) {
-            throw new RuntimeException("Either plugins were not accessible or at least one ");
+            throw new RuntimeException("Either plugins were not accessible or at least one must exist");
         }
         for (File jar : pluginJars) {
             try {
@@ -93,5 +107,33 @@ public abstract class UIMAServerBase extends URLClassLoader implements UIMAServe
     @Override
     public UIMAServerPlugin getPlugin(String pluginName) {
         return plugins.get(pluginName.toLowerCase());
+    }
+
+    public UIMAStream getStream(String streamName) {
+        return streams.get(streamName.toLowerCase());
+    }
+
+    public UIMAStream registerStream(String streamName, AnalysisEngineDescription metadataDesc, AnalysisEngineDescription pipelineDesc) {
+        if (getStream(streamName) != null) {
+            throw new IllegalStateException("A stream with " + streamName + " has already been registered!");
+        }
+        try {
+            UIMAStream ret = UIMAStream.build(streamName.toLowerCase(), metadataDesc, pipelineDesc).get();
+            streams.put(streamName.toLowerCase(), ret);
+            return ret;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Building of stream " + streamName + " failed!", e);
+        }
+    }
+
+    public UIMANLPResultSerializer getSerializer(String serializerName) {
+        return serializers.get(serializerName.toLowerCase());
+    }
+
+    public void registerSerializer(String streamName, UIMANLPResultSerializer serializer) {
+        if (getSerializer(streamName) != null) {
+            throw new IllegalStateException("A stream with " + streamName + " has already been registered!");
+        }
+        serializers.put(streamName.toLowerCase(), serializer);
     }
 }

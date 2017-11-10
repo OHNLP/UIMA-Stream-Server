@@ -2,6 +2,7 @@ package edu.mayo.bsi.uima.stream.rest.models;
 
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * A Server Response to a NLP Request, interactions with this class should only be done through
@@ -11,9 +12,9 @@ public class ServerResponse {
     private final long jobDuration;
     private final String metadata;
     private final String message;
-    private final Serializable content;
+    private final Map<String, Serializable> content;
 
-    public ServerResponse(long jobDuration, String metadata, String message, Serializable content) {
+    public ServerResponse(long jobDuration, String metadata, String message, Map<String, Serializable> content) {
         this.jobDuration = jobDuration;
         this.metadata = metadata;
         this.message = message;
@@ -32,7 +33,7 @@ public class ServerResponse {
         return message;
     }
 
-    public Serializable getContent() {
+    public Map<String, Serializable> getContent() {
         return content;
     }
 }
