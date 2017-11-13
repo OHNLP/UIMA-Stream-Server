@@ -17,6 +17,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A runnable Spring Boot application that handles POST requests via REST and submits asynchronously to
@@ -26,8 +28,11 @@ import java.util.concurrent.CompletableFuture;
 @SpringBootApplication
 public class UIMARESTServer extends UIMAServerBase {
 
+    private Logger logger;
+
     @Override
     public void start() {
+        logger = Logger.getLogger("UIMA-REST-Server");
         // No special initialization tasks needed
     }
 
@@ -54,20 +59,26 @@ public class UIMARESTServer extends UIMAServerBase {
         final long startTime = System.currentTimeMillis();
         CompletableFuture<CAS> pipelineResult = stream.submit(req.getDocument(), req.getMetadata());
         pipelineResult.thenApply((cas) -> {
-            Map<String, Serializable> results = new HashMap<>();
-            for (String serializerName : req.getSerializers()) {
-                UIMANLPResultSerializer serializer = getSerializer(serializerName);
-                if (serializer == null) {
-                    results.put(serializerName.toLowerCase(),
-                            "Illegal Argument: serializer " + serializerName.toLowerCase() + " not found!");
-                } else {
-                    results.put(serializerName.toLowerCase(), serializer.serializeNLPResult(cas));
+            try {
+                Map<String, Serializable> results = new HashMap<>();
+                for (String serializerName : req.getSerializers()) {
+                    UIMANLPResultSerializer serializer = getSerializer(serializerName);
+                    if (serializer == null) {
+                        results.put(serializerName.toLowerCase(),
+                                "Illegal Argument: serializer " + serializerName.toLowerCase() + " not found!");
+                    } else {
+                        results.put(serializerName.toLowerCase(), serializer.serializeNLPResult(cas));
+                    }
                 }
+                ServerResponse resp = new ServerResponse(System.currentTimeMillis() - startTime,
+                        req.getMetadata(), req.getDocument(), results);
+                ret.complete(resp);
+                return cas;
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Error occurred during pipeline serialization!", e);
+                ret.completeExceptionally(e);
+                return cas;
             }
-            ServerResponse resp = new ServerResponse(System.currentTimeMillis() - startTime,
-                    req.getMetadata(), req.getDocument(), results);
-            ret.complete(resp);
-            return cas;
         });
 
         return ret;

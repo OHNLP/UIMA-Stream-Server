@@ -70,8 +70,8 @@ public class UIMAStreamImpl implements UIMAStream {
                         SimplePipeline.runPipeline(
                                 STREAM_READER_DESC,
                                 pipelineBuilder.createAggregateDescription());
-                    } catch (UIMAException | IOException e) {
-                        e.printStackTrace();
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, "Error during initialization", e);
                         threadPool.shutdownNow();
                     }
                 });

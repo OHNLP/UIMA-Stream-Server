@@ -14,10 +14,11 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -42,6 +43,7 @@ public abstract class UIMAServerBase implements UIMAServer {
     }
 
     private void init() {
+        loadLibs();
         loadPlugins();
         enablePlugins();
         start();
@@ -50,6 +52,29 @@ public abstract class UIMAServerBase implements UIMAServer {
     private void enablePlugins() {
         for (UIMAServerPlugin p : plugins.values()) {
             p.onEnable(this);
+        }
+    }
+
+    private void loadLibs() {
+        File libDir = new File("libs");
+        if (!libDir.exists()) {
+            if (!libDir.mkdirs()) {
+                throw new RuntimeException("Could not create a lib folder");
+            }
+        }
+        if (!libDir.isDirectory()) {
+            throw new RuntimeException("/lib is reserved and is not a directory");
+        }
+        File[] libJars = libDir.listFiles(new FileUtil.ExtFilenameFilter("jar"));
+        if (libJars == null || libJars.length == 0) {
+            return;
+        }
+        for (File jar : libJars) {
+            try {
+                addURL(jar.toURI().toURL());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
