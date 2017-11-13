@@ -1,5 +1,6 @@
 package edu.mayo.bsi.uima.server.core;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import edu.mayo.bsi.uima.server.api.UIMAStream;
 import edu.mayo.bsi.uima.server.core.cc.StreamResultHandlerCasConsumer;
 import edu.mayo.bsi.uima.server.core.cr.BlockingStreamCollectionReader;
@@ -56,7 +57,7 @@ public class UIMAStreamImpl implements UIMAStream {
 
         // We don't really need to use a thread pool for this initial application, but it is included as there is
         // no real overhead cost and is way easier to expand on in the future
-        threadPool = Executors.newFixedThreadPool(numPipelines);
+        threadPool = Executors.newFixedThreadPool(numPipelines, new ThreadFactoryBuilder().setNameFormat("UIMA-" + streamName + "-%d").build());
         try {
             AggregateBuilder pipelineBuilder = new AggregateBuilder();
             if (metadataDesc != null) {

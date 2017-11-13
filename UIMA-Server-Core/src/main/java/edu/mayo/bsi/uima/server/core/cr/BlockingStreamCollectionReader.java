@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBase {
 
+    // TODO this does not support multiple streams (only multiple instances of the same stream)
     private static final BlockingDeque<Job> PROCESSING_QUEUE = new LinkedBlockingDeque<>();
     private static final AtomicBoolean STREAM_OPEN = new AtomicBoolean(true);
     private Job CURRENT_WORK = null;
