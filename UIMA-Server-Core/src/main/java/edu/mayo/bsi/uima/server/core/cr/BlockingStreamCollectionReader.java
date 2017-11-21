@@ -3,34 +3,49 @@ package edu.mayo.bsi.uima.server.core.cr;
 
 import edu.mayo.bsi.uima.server.core.internal.COMMON;
 import edu.mayo.bsi.uima.server.StreamingMetadata;
+import org.apache.uima.UimaContext;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.component.JCasCollectionReader_ImplBase;
+import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Progress;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A collection reader implementation for UIMA that supports streamed (live) input; will continuously wait
  * until an element is available for processing in a shared queue and block otherwise, <br>
- * Jobs can be submitted via {@link #submitMessage(java.util.UUID, String, String)}. <br>
+ * Jobs can be submitted via {@link #submitMessage(String, java.util.UUID, String, String)}. <br>
  * <br>
  * Streams will be shutdown upon calls to {@link #shutdownQueue()}, at which point the queue will cease accepting new items
  * and all consumer threads will quit after processing the final document in the queue.
  */
 public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBase {
 
+    public static final String PARAM_QUEUENAME = "QUEUE_NAME";
+
     // TODO this does not support multiple streams (only multiple instances of the same stream)
-    private static final BlockingDeque<Job> PROCESSING_QUEUE = new LinkedBlockingDeque<>();
+    private static final Map<String, BlockingDeque<Job>> PROCESSING_QUEUES = new ConcurrentHashMap<>();
     private static final AtomicBoolean STREAM_OPEN = new AtomicBoolean(true);
     private Job CURRENT_WORK = null;
+    private BlockingDeque<Job> PROCESSING_QUEUE;
+    @ConfigurationParameter(name = PARAM_QUEUENAME)
+    private String QUEUE_NAME;
+
+
+    @Override
+    public void initialize(UimaContext context) throws ResourceInitializationException {
+        super.initialize(context);
+        synchronized (PROCESSING_QUEUES) {
+            PROCESSING_QUEUE = PROCESSING_QUEUES.computeIfAbsent(QUEUE_NAME, (s) -> new LinkedBlockingDeque<>());
+        }
+    }
 
     public void getNext(JCas jCas) throws IOException, CollectionException {
         jCas.setDocumentText(CURRENT_WORK.text);
@@ -52,10 +67,10 @@ public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBas
      */
     @Override
     public boolean hasNext() {
-        synchronized (PROCESSING_QUEUE) {
-            while ((CURRENT_WORK = PROCESSING_QUEUE.pollFirst()) == null && STREAM_OPEN.get()) {
+        synchronized (PROCESSING_QUEUES) {
+            while ((((CURRENT_WORK = PROCESSING_QUEUE.pollFirst())) == null) && STREAM_OPEN.get()) {
                 try {
-                    PROCESSING_QUEUE.wait(1000);
+                    PROCESSING_QUEUES.wait(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -68,6 +83,7 @@ public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBas
      * Submits a document to a UIMA pipeline for processing. Will block if the NLP queue is currently full until the
      * task is successfully submitted into the queue
      *
+     * @param name     The queue to submit this job to
      * @param jobID    A unique Job ID associated with this job
      * @param doc      The document to process through the UIMA pipeline
      * @param metadata A string representation of any metadata to associate with the document, that can be
@@ -79,11 +95,10 @@ public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBas
      * A copy is returned as UIMA recycles CAS objects for sequential
      * reads and as such consistency of data for asynchronous operations cannot be guaranteed if the original CAS is
      * returned instead.
-     *
      * @throws IllegalStateException    If the UIMA stream pipeline has been shut down
      * @throws IllegalArgumentException if another job with the same ID already exists in the queue
      */
-    public static CompletableFuture<CAS> submitMessage(UUID jobID, String doc, String metadata) {
+    public static CompletableFuture<CAS> submitMessage(String name, UUID jobID, String doc, String metadata) {
         if (!STREAM_OPEN.get()) {
             throw new IllegalStateException("Trying to submit a message for processing to a closed queue");
         } else {
@@ -95,9 +110,11 @@ public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBas
             }
             while (!successfulSubmit) {
                 try {
-                    successfulSubmit = PROCESSING_QUEUE.offer(j, 1000, TimeUnit.MILLISECONDS);
-                    synchronized (PROCESSING_QUEUE) {
-                        PROCESSING_QUEUE.notifyAll();
+                    final BlockingDeque<Job> queue = PROCESSING_QUEUES
+                            .computeIfAbsent(name, (s) -> new LinkedBlockingDeque<>());
+                    successfulSubmit = queue.offer(j, 1000, TimeUnit.MILLISECONDS);
+                    synchronized (PROCESSING_QUEUES) {
+                        PROCESSING_QUEUES.notifyAll();
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -122,8 +139,8 @@ public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBas
      * @return True if the threads used by this stream should be shut down - that is to say the stream is no longer
      * accepting new jobs AND has processed all existing jobs
      */
-    public static boolean shouldTerminateThread() {
-        return isShutdown() && PROCESSING_QUEUE.size() == 0;
+    public boolean shouldTerminateThread() {
+        return isShutdown() && PROCESSING_QUEUES.getOrDefault(QUEUE_NAME, new LinkedBlockingDeque<>()).size() == 0;
     }
 
     /**
@@ -136,8 +153,8 @@ public class BlockingStreamCollectionReader extends JCasCollectionReader_ImplBas
         if (!STREAM_OPEN.getAndSet(false)) {
             throw new IllegalStateException("Shutting down an already shut down queue");
         }
-        synchronized (PROCESSING_QUEUE) {
-            PROCESSING_QUEUE.notifyAll();
+        synchronized (PROCESSING_QUEUES) {
+            PROCESSING_QUEUES.notifyAll();
         }
     }
 

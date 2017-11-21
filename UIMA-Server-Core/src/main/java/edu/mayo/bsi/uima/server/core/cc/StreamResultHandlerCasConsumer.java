@@ -21,17 +21,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class StreamResultHandlerCasConsumer extends JCasConsumer_ImplBase {
 
-
-    private static TypeSystemDescription TYPESYSTEM;
-
-    static {
-        try {
-            TYPESYSTEM = TypeSystemDescriptionFactory.createTypeSystemDescription();
-        } catch (ResourceInitializationException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void process(JCas cas) throws AnalysisEngineProcessException {
         StreamingMetadata meta = JCasUtil.selectSingle(cas, StreamingMetadata.class);
@@ -44,7 +33,7 @@ public class StreamResultHandlerCasConsumer extends JCasConsumer_ImplBase {
             return; // The relevant completable future for the job is already gone, this should not happen but we don't want to crash the pipeline either TODO log
         }
         try {
-            CAS dest = CasCreationUtils.createCas(TYPESYSTEM, null, null);
+            CAS dest = CasCreationUtils.createCas(TypeSystemDescriptionFactory.createTypeSystemDescription(), null, null);
             CasCopier.copyCas(cas.getCas(), dest, true, false);
             ret.complete(dest);
         } catch (Exception e) {

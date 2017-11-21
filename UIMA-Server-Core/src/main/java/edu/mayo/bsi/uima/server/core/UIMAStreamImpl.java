@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import edu.mayo.bsi.uima.server.api.UIMAStream;
 import edu.mayo.bsi.uima.server.core.cc.StreamResultHandlerCasConsumer;
 import edu.mayo.bsi.uima.server.core.cr.BlockingStreamCollectionReader;
-import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -14,7 +13,6 @@ import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.logging.Level;
@@ -25,16 +23,6 @@ public class UIMAStreamImpl implements UIMAStream {
     private Logger logger;
     private String name;
     private ExecutorService threadPool;
-    private static CollectionReaderDescription STREAM_READER_DESC;
-
-    static {
-        try {
-            STREAM_READER_DESC = CollectionReaderFactory.createReaderDescription(BlockingStreamCollectionReader.class);
-        } catch (ResourceInitializationException e) {
-            e.printStackTrace();
-            System.exit(1); // This should never be reached, but cannot be handled/is world-ending if it does.
-        }
-    }
 
     public UIMAStreamImpl(String streamName, AnalysisEngineDescription metadataDesc, AnalysisEngineDescription pipelineDesc) throws ResourceInitializationException {
         logger = Logger.getLogger("UIMA-Stream-" + streamName);
@@ -59,6 +47,9 @@ public class UIMAStreamImpl implements UIMAStream {
         // no real overhead cost and is way easier to expand on in the future
         threadPool = Executors.newFixedThreadPool(numPipelines, new ThreadFactoryBuilder().setNameFormat("UIMA-" + streamName + "-%d").build());
         try {
+            CollectionReaderDescription STREAM_READER_DESC
+                    = CollectionReaderFactory.createReaderDescription(BlockingStreamCollectionReader.class,
+                    BlockingStreamCollectionReader.PARAM_QUEUENAME, name);
             AggregateBuilder pipelineBuilder = new AggregateBuilder();
             if (metadataDesc != null) {
                 pipelineBuilder.add(metadataDesc);
@@ -87,7 +78,7 @@ public class UIMAStreamImpl implements UIMAStream {
 
     @Override
     public CompletableFuture<CAS> submit(String document, String metadata) {
-        return BlockingStreamCollectionReader.submitMessage(UUID.randomUUID(), document, metadata);
+        return BlockingStreamCollectionReader.submitMessage(name, UUID.randomUUID(), document, metadata);
     }
 
     @Override
