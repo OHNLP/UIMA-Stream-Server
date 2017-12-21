@@ -60,14 +60,14 @@ public class UIMARESTServer extends UIMAServerBase {
         CompletableFuture<CAS> pipelineResult = stream.submit(req.getDocument(), req.getMetadata());
         pipelineResult.thenApply((cas) -> {
             try {
-                Map<String, Serializable> results = new HashMap<>();
+                Map<String, String> results = new HashMap<>();
                 for (String serializerName : req.getSerializers()) {
                     UIMANLPResultSerializer serializer = getSerializer(serializerName);
                     if (serializer == null) {
                         results.put(serializerName.toLowerCase(),
                                 "Illegal Argument: serializer " + serializerName.toLowerCase() + " not found!");
                     } else {
-                        results.put(serializerName.toLowerCase(), serializer.serializeNLPResult(cas));
+                        results.put(serializerName.toLowerCase(), serializer.serializeNLPResult(cas).toString());
                     }
                 }
                 ServerResponse resp = new ServerResponse(System.currentTimeMillis() - startTime,

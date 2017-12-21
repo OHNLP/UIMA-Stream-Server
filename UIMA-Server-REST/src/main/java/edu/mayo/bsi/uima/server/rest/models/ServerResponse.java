@@ -12,11 +12,11 @@ public class ServerResponse {
     private long jobDuration = 0;
     private String metadata = null;
     private String message = null;
-    private Map<String, Serializable> content = null;
+    private Map<String, String> content = null;
 
     public ServerResponse() {}
 
-    public ServerResponse(long jobDuration, String metadata, String message, Map<String, Serializable> content) {
+    public ServerResponse(long jobDuration, String metadata, String message, Map<String, String> content) {
         this.jobDuration = jobDuration;
         this.metadata = metadata;
         this.message = message;
@@ -35,7 +35,7 @@ public class ServerResponse {
         return message;
     }
 
-    public Map<String, Serializable> getContent() {
+    public Map<String, String> getContent() {
         return content;
     }
 
@@ -51,7 +51,7 @@ public class ServerResponse {
         this.message = message;
     }
 
-    public void setContent(Map<String, Serializable> content) {
+    public void setContent(Map<String, String> content) {
         this.content = content;
     }
 }
