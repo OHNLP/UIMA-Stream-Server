@@ -1,22 +1,37 @@
 package edu.mayo.bsi.uima.server.core;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import edu.mayo.bsi.uima.server.StreamingMetadata;
 import edu.mayo.bsi.uima.server.api.UIMAStream;
 import edu.mayo.bsi.uima.server.core.cc.StreamResultHandlerCasConsumer;
 import edu.mayo.bsi.uima.server.core.cr.BlockingStreamCollectionReader;
+import edu.mayo.bsi.uima.server.core.internal.COMMON;
+import org.apache.uima.UIMAException;
+import org.apache.uima.UIMAFramework;
+import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.AggregateBuilder;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
+import org.apache.uima.fit.internal.ResourceManagerFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
+import org.apache.uima.fit.util.JCasUtil;
+import org.apache.uima.fit.util.LifeCycleUtil;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.ResourceManager;
+import org.apache.uima.util.CasCreationUtils;
 
+import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 
 public class UIMAStreamImpl implements UIMAStream {
 
@@ -59,16 +74,17 @@ public class UIMAStreamImpl implements UIMAStream {
             for (int i = 0; i < numPipelines; i++) {
                 initPipeline(threadPool, STREAM_READER_DESC, pipelineBuilder.createAggregateDescription());
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             threadPool.shutdownNow();
             throw e;
         }
     }
 
+
     private void initPipeline(ExecutorService threadPool, CollectionReaderDescription STREAM_READER_DESC, AnalysisEngineDescription PIPELINE_DESC) {
         threadPool.submit(() -> {
             try {
-                SimplePipeline.runPipeline(
+                runPipeline(
                         STREAM_READER_DESC,
                         PIPELINE_DESC);
             } catch (Throwable e) {
@@ -76,6 +92,61 @@ public class UIMAStreamImpl implements UIMAStream {
                 initPipeline(threadPool, STREAM_READER_DESC, PIPELINE_DESC);
             }
         });
+    }
+
+    /**
+     * Clone of {@link SimplePipeline#runPipeline(CollectionReader, AnalysisEngine...)}
+     * with added exception handling to complete futures exceptionally if an error is encountered
+     */
+    public static void runPipeline(final CollectionReaderDescription readerDesc,
+                                   final AnalysisEngineDescription... descs) throws UIMAException, IOException {
+
+        CollectionReader reader = null;
+        AnalysisEngine aae = null;
+        try {
+            ResourceManager resMgr = ResourceManagerFactory.newResourceManager();
+
+            // Create the components
+            reader = UIMAFramework.produceCollectionReader(readerDesc, resMgr, null);
+
+            // Create AAE
+            final AnalysisEngineDescription aaeDesc = createEngineDescription(descs);
+
+            // Instantiate AAE
+            aae = UIMAFramework.produceAnalysisEngine(aaeDesc, resMgr, null);
+
+            // Create CAS from merged metadata
+            final CAS cas = CasCreationUtils.createCas(asList(reader.getMetaData(), aae.getMetaData()),
+                    null, resMgr);
+            reader.typeSystemInit(cas.getTypeSystem());
+
+            // Process
+            while (reader.hasNext()) {
+                reader.getNext(cas);
+                try {
+                    aae.process(cas);
+                } catch (Throwable e) {
+                    StreamingMetadata meta = JCasUtil.selectSingle(cas.getJCas(), StreamingMetadata.class);
+                    if (meta == null) {
+                        return;
+                    }
+                    UUID jobID = UUID.fromString(meta.getJobID());
+                    CompletableFuture<CAS> ret = COMMON.CURR_JOBS.remove(jobID);
+                    if (ret == null) {
+                        return; // The relevant completable future for the job is already gone, this should not happen but we don't want to crash the pipeline either TODO log
+                    }
+                    ret.completeExceptionally(e);
+                }
+                cas.reset();
+            }
+
+            // Signal end of processing
+            aae.collectionProcessComplete();
+        } finally {
+            // Destroy
+            LifeCycleUtil.destroy(reader);
+            LifeCycleUtil.destroy(aae);
+        }
     }
 
 
