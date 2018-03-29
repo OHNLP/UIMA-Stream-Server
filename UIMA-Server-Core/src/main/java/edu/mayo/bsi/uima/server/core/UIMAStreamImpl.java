@@ -57,22 +57,25 @@ public class UIMAStreamImpl implements UIMAStream {
             pipelineBuilder.add(pipelineDesc);
             pipelineBuilder.add(AnalysisEngineFactory.createEngineDescription(StreamResultHandlerCasConsumer.class));
             for (int i = 0; i < numPipelines; i++) {
-                threadPool.submit(() -> {
-                    try {
-                        SimplePipeline.runPipeline(
-                                STREAM_READER_DESC,
-                                pipelineBuilder.createAggregateDescription());
-                    } catch (Exception e) {
-                        logger.log(Level.SEVERE, "Error during initialization", e);
-                        threadPool.shutdownNow();
-                    }
-                });
-
+                initPipeline(threadPool, STREAM_READER_DESC, pipelineBuilder.createAggregateDescription());
             }
         } catch (Exception e) {
             threadPool.shutdownNow();
             throw e;
         }
+    }
+
+    private void initPipeline(ExecutorService threadPool, CollectionReaderDescription STREAM_READER_DESC, AnalysisEngineDescription PIPELINE_DESC) {
+        threadPool.submit(() -> {
+            try {
+                SimplePipeline.runPipeline(
+                        STREAM_READER_DESC,
+                        PIPELINE_DESC);
+            } catch (Throwable e) {
+                logger.log(Level.SEVERE, "Error during pipeline operation", e);
+                initPipeline(threadPool, STREAM_READER_DESC, PIPELINE_DESC);
+            }
+        });
     }
 
 
