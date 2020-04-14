@@ -37,7 +37,8 @@ public class StreamResultHandlerCasConsumer extends JCasConsumer_ImplBase {
         }
         try {
             Logger.getLogger(StreamResultHandlerCasConsumer.class.getName()).log(Level.SEVERE, jobID + " completed! Creating copy");
-            CAS dest = CasCreationUtils.createCas(TypeSystemDescriptionFactory.createTypeSystemDescription(), null, null);
+
+            CAS dest = CasCreationUtils.createCas(cas.getTypeSystem(), null, null, null);
             CasCopier.copyCas(cas.getCas(), dest, true, false);
             ret.complete(dest);
         } catch (Throwable e) {
