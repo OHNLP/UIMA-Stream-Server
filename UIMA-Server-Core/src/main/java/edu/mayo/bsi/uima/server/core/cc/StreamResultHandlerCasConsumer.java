@@ -15,6 +15,8 @@ import org.apache.uima.util.CasCreationUtils;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Handles completion of a streamed pipeline and returns the results of computation in a deep copy of the result CAS
@@ -30,13 +32,15 @@ public class StreamResultHandlerCasConsumer extends JCasConsumer_ImplBase {
         UUID jobID = UUID.fromString(meta.getJobID());
         CompletableFuture<CAS> ret = COMMON.CURR_JOBS.remove(jobID);
         if (ret == null) {
+            Logger.getLogger(StreamResultHandlerCasConsumer.class.getName()).log(Level.SEVERE, jobID + " completed prematurely with no completeablefuture");
             return; // The relevant completable future for the job is already gone, this should not happen but we don't want to crash the pipeline either TODO log
         }
         try {
+            Logger.getLogger(StreamResultHandlerCasConsumer.class.getName()).log(Level.SEVERE, jobID + " completed! Creating copy");
             CAS dest = CasCreationUtils.createCas(TypeSystemDescriptionFactory.createTypeSystemDescription(), null, null);
             CasCopier.copyCas(cas.getCas(), dest, true, false);
             ret.complete(dest);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             ret.completeExceptionally(e);
         }
     }

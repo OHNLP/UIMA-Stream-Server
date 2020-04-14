@@ -58,7 +58,10 @@ public class UIMARESTServer extends UIMAServerBase {
         }
         final long startTime = System.currentTimeMillis();
         CompletableFuture<CAS> pipelineResult = stream.submit(req.getDocument(), req.getMetadata());
-        pipelineResult.thenApply((cas) -> {
+        pipelineResult.exceptionally(e -> {
+            ret.completeExceptionally(e);
+            return null;
+        }).thenApply((cas) -> {
             try {
                 Map<String, String> results = new HashMap<>();
                 for (String serializerName : req.getSerializers()) {
@@ -74,7 +77,7 @@ public class UIMARESTServer extends UIMAServerBase {
                         req.getMetadata(), req.getDocument(), results);
                 ret.complete(resp);
                 return cas;
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 logger.log(Level.SEVERE, "Error occurred during pipeline serialization!", e);
                 ret.completeExceptionally(e);
                 return cas;
