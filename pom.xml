@@ -14,7 +14,16 @@
         <module>UIMA-Server-REST</module>
         <module>UIMA-Server-Plugins</module>
     </modules>
-    
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub OHNLP Maven Packages</name>
+            <url>https://maven.pkg.github.com/OHNLP/UIMA-Stream-Server</url>
+        </repository>
+    </distributionManagement>
+
+
     <build>
         <plugins>
             <plugin>

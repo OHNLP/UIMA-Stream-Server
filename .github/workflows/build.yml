@@ -1,5 +1,5 @@
 
-name: Maven Package and Deploy
+name: build
 on:
   push:
     branches: [ master ]
