@@ -5,13 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>edu.mayo.bsi.uima-server</groupId>
+        <groupId>edu.mayo.dhs.uima-server</groupId>
         <artifactId>UIMA-Server-Parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>UIMA-Server-Core</artifactId>
-    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <build>
@@ -30,7 +29,7 @@
 
                             <!-- REQUIRED -->
                             <typeSystemIncludes>
-                                <typeSystemInclude>src/main/resources/edu/mayo/bsi/uima/server/types/StreamingMetadataTypes.xml</typeSystemInclude>
+                                <typeSystemInclude>src/main/resources/edu/mayo/dhs/uima/server/types/StreamingMetadataTypes.xml</typeSystemInclude>
                             </typeSystemIncludes>
 
                             <!-- OPTIONAL -->

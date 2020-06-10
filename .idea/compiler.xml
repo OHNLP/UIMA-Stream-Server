@@ -6,9 +6,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="ExampleServerPlugin" />
-        <module name="Stream-Server-Core" />
         <module name="Stream-Server-REST" />
+        <module name="Stream-Server-Core" />
+        <module name="ExampleServerPlugin" />
         <module name="UIMA-Server-Core" />
         <module name="UIMA-Server-REST" />
       </profile>
@@ -24,5 +24,10 @@
       <module name="UIMA-Server-REST" target="1.8" />
       <module name="UIMA-STREAM" target="1.8" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="UIMA-Server-REST" options="-parameters" />
+    </option>
   </component>
 </project>

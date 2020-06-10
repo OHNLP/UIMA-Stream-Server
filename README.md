@@ -9,6 +9,16 @@ Additionally, this project also provides several UIMAServer implementations: the
 that can be run on a standalone node if so desired and interacted with through a client<->server paradigm (i.e. REST)
 <br>
 
+**Usage**
+
+This project contains several modules:
+* UIMA-Server-Core - Base API for interacting with a UIMAServer instance as well as core functionality/implementation
+* UIMA-Server-Plugins - Contains an example plugin implementation 
+* UIMA-Server-REST - Contains a Spring Boot Implementation of UIMA-Server that exposes functionality as a RESTful service
+
+For end users, the primary point of interest will be the UIMA-Server-REST module. Developers may however take interest 
+in the other two modules.
+
 **Threading and Parallel Programming**
 
 UIMA Streams come with built in parallelism on a node-level: the number of threads to use to execute a given pipeline
