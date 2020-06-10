@@ -22,7 +22,7 @@ in the other two modules.
 **Threading and Parallel Programming**
 
 UIMA Streams come with built in parallelism on a node-level: the number of threads to use to execute a given pipeline
-can be set through the `-Duima.server.%name%.threads` jvm flag, where %name% represents the name assigned to the 
+can be set through the `-Duima.streams.%pipeline%.threads=#` jvm flag, where %name% represents the name assigned to the 
 stream for which this setting pertains. 
 
 Note that an individual UIMA pipeline is single-threaded: while a stream can handle multiple documents in parallel,
