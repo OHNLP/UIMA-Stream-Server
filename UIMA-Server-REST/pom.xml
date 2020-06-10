@@ -16,6 +16,14 @@
     <description>A REST implementation of a UIMA Server</description>
     <packaging>jar</packaging>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub OHNLP Maven Packages</name>
+            <url>https://maven.pkg.github.com/OHNLP/UIMA-Stream-Server</url>
+        </repository>
+    </distributionManagement>
+
     <profiles>
         <profile>
             <id>EXECUTABLE</id>
