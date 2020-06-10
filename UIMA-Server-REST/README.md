@@ -5,8 +5,8 @@ A Spring Boot application exposing UIMA-Stream-Server's functionality as a RESTf
 **Installation**
 
 To compile a usable executable, simply run `mvn clean install -P EXECUTABLE`. 
-The resulting executable `./target/UIMA-Server-Core-1.0-SNAPSHOT.jar` can be directly run 
-via `java -jar <JVM_ARGS> UIMA-Server-Core-1.0-SNAPSHOT.jar` alongside the appropriate JVM_ARGS as desired
+The resulting executable `./target/UIMA-Server-REST-1.0-SNAPSHOT.jar` can be directly run 
+via `java -jar <JVM_ARGS> UIMA-Server-REST-1.0-SNAPSHOT.jar` alongside the appropriate JVM_ARGS as desired
 
 To create the requisite workspace, simply launch the server once without any plugins loaded. The working directory will
 be populated and will resemble the following structure:
