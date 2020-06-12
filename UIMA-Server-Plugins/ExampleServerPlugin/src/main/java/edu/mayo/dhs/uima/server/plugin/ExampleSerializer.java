@@ -1,5 +1,7 @@
 package edu.mayo.dhs.uima.server.plugin;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import edu.mayo.dhs.uima.server.StreamingMetadata;
 import edu.mayo.dhs.uima.server.api.UIMANLPResultSerializer;
 import org.apache.uima.cas.CAS;
@@ -13,11 +15,11 @@ import java.io.Serializable;
  */
 public class ExampleSerializer implements UIMANLPResultSerializer {
     @Override
-    public Serializable serializeNLPResult(CAS cas) {
+    public JsonNode serializeNLPResult(CAS cas) {
         try {
             JCas jcas = cas.getJCas();
             StreamingMetadata meta = JCasUtil.selectSingle(jcas, StreamingMetadata.class);
-            return meta.getJobID() + jcas.getDocumentText() + " " + meta.getMetadata();
+            return JsonNodeFactory.instance.objectNode().put("value", meta.getJobID() + jcas.getDocumentText() + " " + meta.getMetadata());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
