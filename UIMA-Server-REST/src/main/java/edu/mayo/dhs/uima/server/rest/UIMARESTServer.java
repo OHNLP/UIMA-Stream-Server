@@ -1,5 +1,7 @@
 package edu.mayo.dhs.uima.server.rest;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import edu.mayo.dhs.uima.server.api.UIMANLPResultSerializer;
 import edu.mayo.dhs.uima.server.api.UIMAStream;
 import edu.mayo.dhs.uima.server.core.UIMAServerBase;
@@ -63,14 +65,17 @@ public class UIMARESTServer extends UIMAServerBase {
             return null;
         }).thenApply((cas) -> {
             try {
-                Map<String, String> results = new HashMap<>();
+                Map<String, JsonNode> results = new HashMap<>();
                 for (String serializerName : req.getSerializers()) {
                     UIMANLPResultSerializer serializer = getSerializer(serializerName);
                     if (serializer == null) {
-                        results.put(serializerName.toLowerCase(),
-                                "Illegal Argument: serializer " + serializerName.toLowerCase() + " not found!");
+                        results.put(
+                                serializerName.toLowerCase(),
+                                JsonNodeFactory.instance.objectNode().put("error",
+                                "Illegal Argument: serializer " + serializerName.toLowerCase() + " not found!")
+                        );
                     } else {
-                        results.put(serializerName.toLowerCase(), serializer.serializeNLPResult(cas).toString());
+                        results.put(serializerName.toLowerCase(), serializer.serializeNLPResult(cas));
                     }
                 }
                 ServerResponse resp = new ServerResponse(System.currentTimeMillis() - startTime,

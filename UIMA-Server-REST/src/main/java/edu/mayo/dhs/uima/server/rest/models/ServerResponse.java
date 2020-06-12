@@ -1,6 +1,7 @@
 package edu.mayo.dhs.uima.server.rest.models;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.mayo.dhs.uima.server.rest.UIMARESTServer;
 
 import java.io.Serializable;
@@ -14,11 +15,11 @@ public class ServerResponse {
     private long jobDuration = 0;
     private String metadata = null;
     private String message = null;
-    private Map<String, String> content = null;
+    private Map<String, JsonNode> content = null;
 
     public ServerResponse() {}
 
-    public ServerResponse(long jobDuration, String metadata, String message, Map<String, String> content) {
+    public ServerResponse(long jobDuration, String metadata, String message, Map<String, JsonNode> content) {
         this.jobDuration = jobDuration;
         this.metadata = metadata;
         this.message = message;
@@ -37,7 +38,7 @@ public class ServerResponse {
         return message;
     }
 
-    public Map<String, String> getContent() {
+    public Map<String, JsonNode> getContent() {
         return content;
     }
 
@@ -53,7 +54,7 @@ public class ServerResponse {
         this.message = message;
     }
 
-    public void setContent(Map<String, String> content) {
+    public void setContent(Map<String, JsonNode> content) {
         this.content = content;
     }
 }
